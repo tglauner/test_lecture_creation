@@ -1,0 +1,892 @@
+\documentclass[handout, aspectratio=169]{beamer}
+%\documentclass[aspectratio=169]{beamer} %1920x1080 resolution
+%Add later package back
+\usepackage{../../../LatexTemplatesAndSamples/mastering_ir_derivatives_beamer} % My custom style
+
+% This goes together with handout feature above
+%\pgfpagesuselayout{16 on 1}[border shrink=2mm] 
+
+% Needs to be set for each class
+\subtitle{Collateral Management for Capital Markets Products}
+
+\begin{document}
+
+\input{../../../LatexTemplatesAndSamples/firstThreeSlides.tex}
+
+\section{Introduction}
+\begin{frame}{What is Collateral?}
+  \begin{itemize}
+    \item Financial transactions involve counterparty risk:
+    \begin{itemize}
+      \item Risk of one party failing to meet obligations.
+    \end{itemize}
+    \item Collateral: asset (cash or securities) pledged to reduce potential losses.
+    \item Common collateral types:
+    \begin{itemize}
+      \item Cash
+      \item Bonds
+      \item Equities
+    \end{itemize} 
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Why is Collateral Required?}
+  \begin{itemize}
+    \item Reduces Counterparty Credit Risk.
+    \item Limits exposure, minimizing default losses.
+    \item Enhances market stability and investor confidence.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Initial Margin (IM) vs. Variation Margin (VM)}
+  \begin{itemize}
+    \item Collateral management involves posting Initial Margin (IM) at trade start and periodically posting Variation Margin (VM).
+  \end{itemize}
+  \begin{itemize}
+    \item Initial Margin:
+    \begin{itemize}
+      \item Upfront collateral to mitigate potential future exposure.
+      \item Acts as a risk buffer against defaults.
+    \end{itemize}
+    \item Variation Margin:
+    \begin{itemize}
+      \item Daily settlement reflecting mark-to-market P\&L changes.
+      \item Ensures minimal real-time counterparty credit exposure.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Financial Products Requiring Collateral\footnote{Loans excluded; focus on Capital Markets}}
+  \begin{itemize}
+    \item Bilateral OTC Derivatives:
+    \begin{itemize}
+      \item Collateral under ISDA Credit Support Annex (CSA).
+      \item Includes Initial Margin and Variation Margin.
+    \end{itemize}
+    \item Centrally Cleared Derivatives:
+    \begin{itemize}
+      \item Standardized IM and VM managed by CCPs\footnote{Defined on slide 10}.
+    \end{itemize}
+    \item Exchange-Traded Derivatives (Futures/Listed Options):
+    \begin{itemize}
+      \item Margin set by exchanges; daily settlement.
+    \end{itemize}
+    \item Repos and Securities Lending:
+    \begin{itemize}
+      \item Haircut as collateral buffer, akin to IM.
+      \item Periodic value checks act as quasi-VM.
+    \end{itemize}
+    \item To-Be-Announced Securities (TBAs):
+    \begin{itemize}
+      \item IM upfront for potential exposure.
+      \item VM adjusts daily via mark-to-market changes.        
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Entities Involved in Collateral Management - 1}
+  \begin{itemize}
+    \item Bank's Internal Legal Entities
+    \begin{itemize}
+      \item Each entity has its own CSA, margin thresholds, and custodial setup.
+      \item Crucial for managing netting sets, regulatory exposure, and liquidity buffers.
+    \end{itemize}
+    \item Counterparties in Transactions
+    \begin{itemize}
+      \item Direct trading counterparties for bilateral trades.
+      \item Governed by ISDA/CSA agreements.
+      \item Vital for exposure calculations, margin calls, and dispute resolution.
+    \end{itemize}
+    \item Futures Commission Merchants (FCMs)
+    \begin{itemize}
+      \item Exchange members; first to cover client losses.
+      \item Post margin to CCPs on clients' behalf.
+      \item Sometimes also called broker.
+      \item Handle VM/IM; debit directly from client accounts.
+      \item Examples: Wells Fargo, BNY Mellon, Deutsche Bank.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Entities Involved in Collateral Management - 2}
+  \begin{itemize}
+    \item Central Counterparties (CCPs)
+    \begin{itemize}
+      \item Exchanges with FCMs as intermediaries.
+      \item Bear counterparty risk for cleared trades.
+      \item Set margin schedules, eligible collateral, and default fund contributions.
+      \item Examples: CME, LCH, Eurex, ICE.
+    \end{itemize}
+    \item Cash Custodians
+    \begin{itemize}
+      \item Manage cash collateral in segregated or pooled accounts.
+      \item Require SWIFT/Fedwire for margin settlements.
+      \item Used for IM in bilateral trades and cleared margin.
+    \end{itemize}
+    \item Securities Custodians
+    \begin{itemize}
+      \item Safeguard and settle pledged securities for margin purposes.
+      \item Enable eligibility filtering, haircuts, and substitutions.
+      \item Interface with repo tri-party agents and optimization platforms.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Entities Involved in Collateral Management - 3}
+  \begin{itemize}
+    \item Federal Reserve (USD Payments)
+    \begin{itemize}
+      \item Core settlement layer for USD cash collateral via Fedwire.
+      \item Used by major institutions for DVP (Delivery vs Payment) and FOP (Free of Payment) settlements.
+      \item Essential for same-day liquidity, efficiency, and regulatory compliance.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+  
+\begin{frame}{Summary of Introduction}
+  \begin{itemize}
+    \item Collateral: Essential for mitigating counterparty risk in capital markets.
+    \item Crucial for maintaining trust and stability in financial systems.
+    \item Core to post-2008 crisis regulations (e.g., Dodd-Frank, EMIR).
+    \item Collateral today is both a risk mitigant and a strategic funding tool
+    \item Effective collateral management is critical for liquidity resilience during market stress    
+  \end{itemize}
+\end{frame}
+
+\section{2008 Financial Crisis Context}
+\begin{frame}{2008 Crisis: Collateral Weaknesses Exposed}
+  \begin{itemize}
+    \item 2008 crisis exposed flaws in bilateral derivatives margining aka collateral.
+    \item Pre-2008 Practices:
+    \begin{itemize} 
+      \item Inconsistent collateral practices across counterparties.
+      \item Uncollateralized exposures caused systemic losses (e.g., Lehman, AIG defaults).
+      \item CSA terms lacked clarity, enforceability, and legal certainty.
+      \item Ratings-based thresholds (e.g., downgrade triggers) failed during cliff events.
+      \item Led to liquidity gaps, procyclical margin calls, and delayed dispute resolution.
+    \end{itemize}
+    \item Emphasized need for daily margining, collateral segregation, and robust dispute mechanisms.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Post-2008 Regulatory Collateral Measures}
+    \begin{itemize}
+        \item Key regulatory frameworks post-2008 crisis:
+        \begin{itemize}
+            \item UMR (Uncleared Margin Rules):
+            \begin{itemize}
+                \item Requires Initial Margin and Variation Margin for uncleared trades.
+                \item Thresholds based on swap book size based on AANA measure of swap notionals.\footnote{AANA will be defined later}
+            \end{itemize}
+            \item Dodd-Frank (Title VII):
+            \begin{itemize}
+                \item U.S. regulation mandating central clearing, collateral segregation, and UMR compliance.
+            \end{itemize}
+            \item EMIR (EU Regulation):
+            \begin{itemize}
+                \item EU counterpart to Dodd-Frank for collateral rules.
+                \item Enforces clearing, reporting, and OTC derivatives risk management.
+            \end{itemize}
+            \item Basel III:
+            \begin{itemize}
+                \item Strengthens global bank capital adequacy, liquidity, and risk management standards.
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+  
+\section{Collateral Management per Asset Class}
+\subsection{Bi-lateral OTC Derivatives}
+\begin{frame}{Bi-lateral OTC Swaps – Overview}
+  \begin{itemize}
+    \item A bi-lateral over-the-counter (OTC) derivative is a contract between two independent, sophisticated entities; terms negotiated directly. 
+    \item Each party manages its own risks and responsibilities.
+    \item Governed by ISDA (International Swaps and Derivatives Association).
+    \item Counterparties follow CSAs defining collateral rules.
+    \item CSA outlines eligible collateral, haircuts, Minimum Transfer Amounts (MTAs), interest on collateral, netting sets, etc.
+    \item Requires both Initial Margin and Variation Margin.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – CSA Collateral Terms}
+  \begin{itemize}
+    \item Example CSA Key Terms:
+    \begin{itemize}
+      \item Counterparty: Citibank North America
+      \item Trade Types: Swaps, Swaptions, Caps/Floors, Money Market instruments and TBAs
+      \item Eligible Collateral: USD cash, USTs, MBS, corporate bonds
+      \item Netting Rules: Swaps nettable with swaptions; not with TBAs or repos\footnote{Repo is considered a MM instrument}
+      \item Haircuts: UST = 2\%, MBS = 5\%
+      \item Minimum Transfer Amount (MTA): \$250k
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – Initial Margin Overview}
+  \begin{itemize}
+    \item IM required under UMR to mitigate potential future exposure (PFE).
+    \item Two main calculation methods:
+    \begin{itemize}
+      \item ISDA Standard Initial Margin Model (SIMM): Risk-sensitive, portfolio-based model.
+      \item SIMM was developed by ISDA and is the standard IM model for non cleared derivatives.
+      \item Grid Method: Fixed \% of notional by trade type and maturity tenor.
+    \end{itemize}
+    \item SIMM preferred by large institutions; Grid used by smaller firms.
+    \item Both methods must meet regulations and apply to eligible counterparties.
+    \item Key IM requirements:
+    \item 
+    \begin{itemize}
+      \item Posted to segregated third-party custodian.
+      \item IM calculated at trade inception.
+      \item IM call triggered if exposure change exceeds MTA.
+    \end{itemize}
+    \item Practically recalculated daily for new/amended trades.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Average Aggregate Notional Amount (AANA)}
+  \begin{itemize}
+    \item Definition: Average notional of OTC derivatives positions over a set period.
+    \item Purpose: Checks if a financial institution meets regulatory thresholds (e.g., EMIR, Dodd-Frank).
+    \item Calculation: Average notional of all OTC derivatives contracts over 12 months.
+    \item Regulatory Relevance:
+      \begin{itemize}
+        \item Sets margining rules for non-centrally cleared derivatives.
+        \item Key for capital and reporting compliance.
+      \end{itemize}
+    \item Impact:
+      \begin{itemize}
+        \item Breaching thresholds enforces clearing, margining, and reporting duties.
+        \item Helps regulators assess systemic risk in derivatives markets.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{UMR Phases and IM Method Requirements - 1}
+  \resizebox{\textwidth}{!}{
+    \begin{tabular}{|l|l|l|l|}
+      \hline
+      Phase & Effective Date & AANA Threshold & Example Institutions \\
+      \hline
+      Phase 1 & Sep 2016 & $>$ \$3 trillion & JPMorgan, Goldman Sachs, Citibank \\
+      Phase 2 & Sep 2017 & $>$ \$2.25 trillion & Morgan Stanley, BofA, Barclays \\
+      Phase 3 & Sep 2018 & $>$ \$1.5 trillion & HSBC, BNP Paribas, Deutsche Bank \\
+      Phase 4 & Sep 2019 & $>$ \$750 billion & RBC, Nomura, Soci\'et\'e G\'en\'erale \\
+      Phase 5 & Sep 2021 & $>$ \$50 billion & AllianceBernstein, Invesco, Aegon \\
+      Phase 6 & Sep 2022 & $>$ \$8 billion & PGGM, Neuberger Berman, Federated Hermes \\
+      \hline
+    \end{tabular}}
+  \vspace{1em}
+  \begin{itemize}
+    \item Phases 1--2: Major global dealers (e.g., JPMorgan, Goldman).
+    \item Phases 3--4: Regional dealers and large international banks.
+    \item Phases 5--6: Smaller buy-side firms and asset managers.
+    \item Firms self-assess phase using confidential AANA data; shared with regulators but not publicly disclosed.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{UMR Phases and IM Method Requirements - 2}
+  \begin{itemize}
+    \item Phases 1--4: SIMM required; Grid method not allowed.
+    \item Phases 5--6: Grid method allowed if agreed; SIMM optional but standard.
+    \item IM CSA must clearly define margin calculation method.
+    \item IM cannot be netted and must be held in segregated custodian accounts (e.g., BNY, JPM).
+    \item Next, we examine SIMM and Grid methods in detail.
+  \end{itemize}
+\end{frame}
+  
+\begin{frame}{Bilateral OTC Swaps – SIMM Overview - 1}
+  \begin{itemize}
+    \item SIMM is based on portfolio sensitivities to risk factors and risk buckets.
+    \item Sensitivity measures are Delta, Vega and Curvature
+      \begin{itemize}
+          \item Delta Sensitivity
+          \begin{itemize}
+            \item Change in portfolio value from a 1 basis point move at prescribed tenors (e.g., 2Y, 5Y, 10Y).  
+            \item Captures linear risk across fixed maturity points.
+          \end{itemize}
+          \item Vega Sensitivity
+          \begin{itemize}
+            \item Change in value from a shift in implied volatility.  
+            \item Captures exposure to volatility risk in options.
+          \end{itemize}
+          \item Curvature Sensitivity
+          \begin{itemize}
+            \item Change in value from large market shocks beyond Delta.  
+            \item Captures non-linear and tail risk.
+        \end{itemize}
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – SIMM Overview - 2}
+  \begin{itemize}
+    \item Risk asset classes are Rates, FX, Credit, Equity, Commodity.
+    \item Prescribed Tenors for sensitivities in interest rate curves
+    \begin{itemize}
+      \item Sensitivities are calculated for fixed tenors (e.g., 1Y, 2Y, 5Y, 10Y for interest rates).
+    \end{itemize}
+    \item In-Bucket Correlations
+    \begin{itemize}
+      \item Sensitivities within the same currency and risk class are aggregated using tenor-specific correlations.
+    \end{itemize}
+    \item Cross-Bucket Correlations
+    \begin{itemize}
+      \item Risk across different currencies or asset classes aggregated using lower cross-correlations.
+    \end{itemize}
+    \item Algorithmic parallels with FRTB Standardized Approach (SA)\footnote{Refer to my FRTB course and lecture 'FRTB SA Sample Calculation for USD/SOFR Interest Rate Swap' for details.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Overview of SIMM Algorithm – 1}
+  \begin{enumerate}
+      \item Identify all relevant risk factors across asset classes:
+      \begin{itemize}
+          \item Interest Rates, FX, Credit, Equity, Commodity.
+      \end{itemize}
+      \item Calculate Delta, Vega, and Curvature sensitivities per risk factor and tenor.
+      \item Assign each sensitivity to the appropriate risk bucket:
+      \begin{itemize}
+        \item A risk bucket groups sensitivities by currency and maturity band to aggregate similar risks.
+        \item Example: mapping sensitivities to risk buckets:
+        \begin{table}[h!]
+        \centering
+        \small
+        \begin{tabular}{|c|c|c|c|}
+        \hline
+        \textbf{Risk Factor} & \textbf{Currency} & \textbf{Tenor} & \textbf{Risk Bucket (Currency + Maturity)} \\
+        \hline
+        USD/SOFR 2Y & USD & 2Y & USD 2–5Y Bucket \\
+        USD/FF 2Y & USD & 2Y & USD 2–5Y Bucket \\
+        USD/SOFR 5Y & USD & 5Y & USD 5–10Y Bucket \\
+        EUR/ESTER 2Y & EUR & 2Y & EUR 2–5Y Bucket \\
+        \hline
+        \end{tabular}
+        \end{table}
+      \end{itemize}
+      \item Apply prescribed risk weights to each sensitivity within each risk bucket.
+  \end{enumerate}
+\end{frame}
+
+
+\begin{frame}{Overview of SIMM Algorithm – 2}
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item Aggregate weighted sensitivities within each bucket using prescribed intra-bucket correlations.
+    \item Aggregate across buckets using cross-bucket correlations where applicable.
+    \item Apply correlation scenarios:
+    \begin{itemize}
+        \item Low, Medium (Base), and High correlation scenarios.
+    \end{itemize}
+    \item Final SIMM Initial Margin = maximum aggregated capital across all correlation scenarios.
+    \item Algorithmic parallels with FRTB Standardized Approach (SA)\footnote{Refer to my FRTB course and lecture 'FRTB SA Sample Calculation for USD/SOFR Interest Rate Swap' for details.}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – IM via Grid Method - 1}
+  \begin{itemize}
+    \item Grid Method: 
+    \begin{itemize}
+      \item Very simple standardized approach for Initial Margin calculation.
+      \item Portfolio IM is just the sum of the trades IM.
+    \end{itemize}
+    \item Predefined 2-dim grid that defines trade IM as \% of notional  
+    \begin{itemize}
+      \item Asset Type  
+      \item Maturity  
+    \end{itemize}
+    \item Ignores netting, correlations and diversification across positions.
+    \item Conservative, requiring higher collateral.
+    \item Unaffected by portfolio specifics or market changes.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – IM via Grid Method - 2}
+  \begin{itemize}
+    \item Example Grid Values:
+      \begin{itemize}
+        \item Interest Rate Swaps
+          \begin{center}
+            \begin{tabular}{l r}
+              \textbf{Tenor} & \textbf{Margin (\% Notional)} \\
+              \hline
+              Up to 2 years & 1\% \\
+              2 to 5 years  & 2\% \\
+              5 to 10 years & 3\% \\
+              Over 10 years & 4\%
+            \end{tabular}
+          \end{center}
+        \item Swaptions
+          \begin{center}
+            \begin{tabular}{l r}
+              \textbf{Type} & \textbf{Margin (\% Notional)} \\
+              \hline
+              ATM Swaptions & 4\% \\
+              OTM Swaptions & 2\% \\
+              ITM Swaptions & 5\%
+            \end{tabular}
+          \end{center}
+      \end{itemize}
+    \item Example: A \$100M interest rate swap with a 4-year maturity needs a margin of 2\%, giving an IM of \$2M
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – IM Custodian Segregation}
+  \begin{itemize}
+    \item IM must be held with an independent third-party custodian (per UMR rules).
+    \item Custodian account needs:
+    \begin{itemize}
+      \item Segregated, non-rehypothecable\footnote{Rehypothecation allows reuse of collateral}, bankruptcy remote.
+      \item Dual-account structure: Pledgor/Pledgee (We/They).
+    \end{itemize}
+    \item Daily workflow:
+    \begin{itemize}
+      \item Run SIMM $\rightarrow$ Calculate IM.
+      \item Instruct movement via MT542 (Deliver) or triparty API.
+      \item Custodian confirms receipt and values collateral.
+    \end{itemize}
+    \item Failure to post → Leads to disputes, reporting, and penalties.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – VM Calculation}
+  \begin{itemize}
+    \item Example: 5Y Payer Swap, Notional: \$100M
+    \begin{itemize}
+      \item Counterparty has exposure to us in case we default
+      \item $T_0$ NPV: -\$800K, $T_1$ NPV: -\$1.1M
+      \item Exposure change = -\$300K $\rightarrow$ VM call = \$300K
+      \item CSA Terms:
+      \begin{itemize}
+        \item MTA = \$250K $\rightarrow$ Call triggered
+        \item Eligible collateral: USD cash or USTs (2\% haircut)
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bilateral OTC Swaps – VM Workflow}
+  \begin{itemize}
+    \item EOD market data snapshot → Compute NPV, exposure
+    \item Margin call issued via Acadia or similar platform by 9:00am EST (T+1)
+    \item Collateral selection:
+    \begin{itemize}
+      \item Extract from eligible inventory
+      \item Optimize funding costs
+      \item Avoid concentration/eligibility breaches
+    \end{itemize}
+    \item Execute via SWIFT (MT542/543) or custodian API
+    \item Reconcile and confirm by 1:00pm EST to avoid disputes
+  \end{itemize}
+\end{frame}
+
+\subsection{Centrally Cleared Derivatives}
+\begin{frame}{Centrally Cleared Derivatives – Overview}
+  \begin{itemize}
+    \item Cleared derivatives: standardized contracts novated to CCP\footnote{Was defined on slide 10}.
+    \item Example: 5Y vanilla Fixed vs. SOFR interest rate swap.
+    \item CCP assumes credit risk, ensuring trade integrity.
+    \item Novation and clearing via FCM to CCPs (e.g., LCH, CME, Eurex, ICE).
+    \item Margining: Daily/intraday VM \& IM per CCP rulebook.
+    \item Accepted margin types: cash (USD, EUR), USTs, eligible securities.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Centrally Cleared Derivatives – IM and VM}
+  \begin{itemize}
+    \item FCM and CCP manage all VM and IM flows.
+    \item Minimal disputes as exchanges serve as final arbiters.
+    \item Broker statements often accepted or reconciled with internal models.
+    \item IM: risk-based buffer set by CCP (e.g., VaR, Expected Shortfall).
+    \item Exact IM replication is tough; APIs exist for pre-trade analysis. Methods not fully disclosed to avoid arbitrage.
+    \item Daily VM: full mark-to-market (MTM) changes settled in cash.
+    \item Cleared swaps lack periodic cashflows; replaced by Price Alignment Interest (PAI).\footnote{PAI details on next slide.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What PAI Is and Covers – and What It Doesn’t}
+  \begin{itemize}
+    \item PAI: Interest on daily VM posted to CCP.
+    \item Removes unintended economic gain/loss from cash VM.
+    \item Based on overnight rate (e.g., SOFR, €STR); applied daily.
+    \item Reflects collateral time value, not swap leg accruals.
+    \item Cleared swaps lack periodic coupons; cashflows replaced by\footnote{Very clever how CCPs avoid coupon payments via financial engineering to convert coupons into VM+PAI}:
+    \begin{itemize}
+      \item Daily VM: Settles MTM, incl. accrued interest.
+      \item PAI: Offsets cost/benefit of cash as VM.
+    \end{itemize}
+    \item Fixed/float accruals in MTM → settled via VM.
+  \end{itemize}
+\end{frame}
+  
+
+\begin{frame}{Daily Workflow for Cleared Margin}
+  \begin{itemize}
+    \item CCP releases margin statement (e.g., LCH Portal) by 6:30am EST.
+    \item FCM debits VM from cash account.
+    \item Initial Margin process:
+    \begin{itemize}
+      \item Eligible collateral: USTs, agencies, major currencies.
+      \item Delivered via FCM or tri-party agent (e.g., BNY, Euroclear).
+    \end{itemize}
+    \item Reconcile daily against FCM statement.
+    \item System monitors exposure by CCP, account, and asset type.
+  \end{itemize}
+\end{frame}
+  
+\subsection{Exchange-Traded Derivatives}
+\begin{frame}{Exchange-Traded Derivatives – Overview}
+  \begin{itemize}
+    \item ETDs: Standardized futures and listed options on organized exchanges (e.g., CME, ICE).
+    \item Existed decades before bilateral and cleared OTC derivatives.
+    \item Examples: Eurodollar futures, S\&P/Dow/Nasdaq futures, S\&P 500 options, Treasury futures, or Eris swap futures (less common).
+    \item Trades are auto-cleared through the exchange-operated CCP upon execution.\footnote{While formally distinct, the exchange and CCP are closely integrated in practice, and the distinction is often treated flexibly.}
+    \item CCP as central counterparty effectively reduces default risk.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Exchange-Traded Derivatives – IM and VM}
+  \begin{itemize}
+    \item Responsibilities mirror cleared derivatives.
+    \item Initial Margin:
+    \begin{itemize}
+      \item Required upfront to open/maintain positions.
+      \item Calculated via SPAN\footnote{see next slide for definition} or VaR (exchange-specific).
+      \item Sensitive to volatility and position size.
+    \end{itemize}
+    \item Variation Margin:
+    \begin{itemize}
+      \item Settled daily in cash (USD/EUR only\footnote{USD/EUR dominate but local exchanges (e.g., SGX, HKEX) also allow local ccy}).
+      \item Reflects full mark-to-market P\&L from prior day’s close.
+      \item Auto-debited from client clearing accounts via FCM.
+    \end{itemize}
+    \item CCP informs FCM early morning; FCM updates clients.
+    \item Intraday margin calls possible during high volatility.
+  \end{itemize}
+\end{frame}
+  
+\begin{frame}{SPAN – Exchange Margin Methodology}
+  \begin{itemize}
+    \item SPAN (Standard Portfolio Analysis of Risk): Standard for Initial Margin on futures/options (e.g., CME)
+    \item Assesses worst-case loss across 16 scenarios:
+    \begin{itemize}
+      \item Price moves, volatility shifts, correlation breakdowns
+      \item Includes delta, gamma\footnote{Called curvature in SIMM and FRTB SA}, vega, and cross-margining
+    \end{itemize}
+    \item Risk evaluated at portfolio level, not per product
+    \item IM recalibrated daily; scales with volatility
+    \item Offsets allowed for correlated products (e.g., equity index futures and options)
+    \item No offsets across uncorrelated products (e.g., Eris swap futures vs. equity futures)
+  \end{itemize}    
+\end{frame}
+    
+\begin{frame}{SPAN Risk Array – Visual Example}
+  \centering
+  \begin{tabular}{|c|c|c|c|}
+  \hline
+  \textbf{Price Change} & \textbf{Volatility} & \textbf{Scenario} & \textbf{Estimated Loss (\$)\footnote{In the real world some of these scenarios results in gains.}} \\
+  \hline
+  +5\% & Unchanged & Bull Market & -12,000 \\
+  +5\% & +10\%     & Volatile Bull & -18,000 \\
+  0\%  & +20\%     & Vol Shock     & -15,000 \\
+  -5\% & Unchanged & Bear Market   & -10,000 \\
+  -5\% & -10\%     & Calm Bear     & -8,000 \\
+  -10\% & +15\%    & Crash + Vol   & -25,000 \\
+  \hline
+  \multicolumn{3}{|r|}{\textbf{Worst-case Scenario}} & \textbf{-25,000} \\
+  \hline
+  \end{tabular}
+  
+  {\footnotesize SPAN Initial Margin = Maximum projected loss across all modeled scenarios.}
+\end{frame}
+    
+\subsection{Repos and Securities Lending}
+\begin{frame}{Repos and Securities Lending – Overview}
+  \begin{itemize}
+    \item Repo: short-term funding trade exchanging cash for securities with a repurchase agreement.
+    \begin{itemize}
+      \item Can be used to borrow cash cheaply as it's collateralized.
+      \item Can be used to borrow/lend securities for cash and pay/receive interest.
+    \end{itemize}
+    \item Structure: bilateral (direct) or tri-party (via agent like BNY/JPM).
+    \item Collateralized: lender holds securities; borrower gets cash.
+    \item Daily margining: based on collateral's mark-to-market value.
+    \item Common collateral: USTs, agencies, IG corporates, equities (with haircut applied).
+    \item Margin calls/substitutions managed via custodian or tri-party platform.
+    \item Repos transform ineligible assets into CCP-eligible collateral for IM.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Repos and Securities Lending – IM and VM}
+  \begin{itemize}
+    \item Initial Margin:
+    \begin{itemize}
+      \item Not usually needed in standard repos but often included as a haircut (e.g., 2\% on USTs, 5–10\% on corporates).
+      \item Haircut serves as a buffer (like IM) to protect cash lender from liquidation losses.
+    \end{itemize}
+    \item Variation Margin:
+    \begin{itemize}
+      \item Based on daily mark-to-market of collateral vs. cash; safeguards against collateral price drops.
+    \end{itemize}
+    \item Margin thresholds and call timing set in repo agreement or triparty schedule.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Use Case: Collateral Transformation via Repo}
+  \begin{itemize}
+    \item Converts ineligible assets (e.g., equities, corporates) into CCP-eligible collateral (e.g., USTs)
+    \item Process:
+    \begin{enumerate}
+      \item Post ineligible assets as repo collateral
+      \item Receive cash from dealer/triparty agent
+      \item Use cash to buy eligible USTs
+      \item Post USTs as Initial Margin to CCP
+    \end{enumerate}
+    \item Boosts funding efficiency; avoids forced liquidation of portfolio assets
+    \item Key factors: maturity alignment, haircuts, eligibility risk, repo recall timing
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Triparty Repo Margining}
+  \begin{itemize}
+    \item Daily EOD market valuation by tri-party agent (e.g., JPM, BNY Mellon)
+    \item Margin requirements shared by 6:00 AM EST
+    \item Margin movement:
+    \begin{itemize}
+      \item Auto-allocated from eligible collateral pool
+      \item Substitution allowed based on liquidity/availability
+    \end{itemize}
+    \item Tri-party agent duties:
+    \begin{itemize}
+      \item Enforces eligibility criteria, applies haircuts
+      \item Optimizes collateral allocation in the pool
+      \item Tracks corporate actions on pledged securities
+    \end{itemize}
+    \item Reporting available to both parties via secure portal or API
+  \end{itemize}
+\end{frame}
+  
+\subsection{TBAs}
+\begin{frame}{TBAs and MBS – Overview}
+  \begin{itemize}
+    \item TBAs\footnote{I am an expert in MBS and ABS. If you need a very detailed course please send me a message so I can send you a coupon to my MBS\&ABS course on Udemy.}: Forward-settling trades in agency MBS markets.
+    \item Used by asset managers, insurers, REITs for MBS exposure before pool identification.
+    \item Governed by SIFMA/FINRA; margining required under FINRA Rule 4210.
+    \item Forward structure → counterparty risk and therefore margining needed.
+    \item Settled bilaterally (not CCP-cleared) via broker-dealer counterparties.
+    \item Trade is reported to TRACE\footnote{Check out \url{https://www.finra.org/filing-reporting/trace}} (Trade Reporting and Compliance Engine) after execution to promote market transparency.
+    \item TRACE is FINRA’s platform for mandatory post-trade reporting of bonds and agency MBS trades.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{TBAs and MBS – IM and VM}
+  \begin{itemize}
+    \item Initial Margin:
+    \begin{itemize}
+      \item FINRA 4210 may require base margin (e.g., 2\%) in addition to VM.  
+      \item IM factors:
+      \begin{itemize}
+        \item Counterparty type (e.g., exempt accounts, registered funds).
+        \item Net exposure above thresholds (e.g., \$2.5M de minimis).
+      \end{itemize}
+    \end{itemize}
+    \item Variation Margin:
+    \begin{itemize}
+      \item Based on daily mark-to-market vs. agreed forward price.
+    \end{itemize}
+    \item Minimum Transfer Amounts: Usually \$250K to avoid small payments going back and forth.
+    \item VM settled in USD cash with dealer; governed by agreement timing/thresholds.
+    \item No central clearing: Margin terms differ by counterparty; operational tracking needed per trade.
+  \end{itemize}
+\end{frame}
+  
+\begin{frame}{Margining Process for TBAs}
+  \begin{itemize}
+    \item Trade details (CUSIP, settle date, size) logged at execution.
+    \item Mark-to-market based on TRACE or dealer prices:
+    \begin{itemize}
+      \item TRACE reflects executed prices
+      \item Unlike OTC derivatives MTM, which uses models varying by counterparty.
+    \end{itemize}
+    \item FINRA 4210 Margin Rules:
+    \begin{itemize}
+      \item Typical Minimum Transfer Amount (MTA): \$250k.
+      \item Margin = 2\% base + daily variation.
+      \item Base Margin:
+      \begin{itemize}
+        \item 2\%: For exempt counterparties (e.g., mortgage banks, regulated institutions, broker-dealers, GSEs).
+        \item 5\%: For non-exempt counterparties (e.g., hedge funds, asset managers).
+      \end{itemize}
+    \end{itemize}
+    \item Daily exposure calculation $\rightarrow$ cash movement to broker.
+    \item Auditable records and reporting to FINRA.
+  \end{itemize}
+\end{frame}
+  
+\section{Operations}
+\begin{frame}{Collateral Inventory Management}
+  \begin{itemize}
+    \item Centralized, real-time view of available, pledged, and encumbered\footnote{means that it cannot be freely used for collateral} assets
+    \item Sources: internal position systems, custodians, tri-party agents, clearing brokers
+    \item Key data points: eligibility by CSA/CCP, haircut application, maturity, issuer, currency, liquidity
+    \item Supports margin call fulfillment, collateral substitution, funding optimization, and regulatory compliance
+    \item Critical across asset classes: OTC derivatives, cleared derivatives, repos, MBS forwards, and ETDs
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Collateral Settlement Workflow}
+  \begin{itemize}
+    \item Instructions sent via SWIFT MT540–543 or custodian APIs
+    \item Settlement methods: DVP (Delivery vs. Payment) or FOP (Free of Payment)
+    \item Cutoffs vary by custodian, asset type, and time zone
+    \item Affirmation of collateral movements critical to prevent settlement fails
+    \item Same-day settlement for VM; IM and substitutions may follow next-day cycles
+    \item Active monitoring of settlement status, fails, and collateral recalls
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Dispute Management and Reconciliation}
+  \begin{itemize}
+    \item Daily portfolio and margin reconciliation required under UMR, EMIR
+    \item Common breaks: MTM differences, collateral disputes, booking mismatches
+    \item Sources: risk systems, counterparty statements, custodians
+    \item Tools: TriResolve (exposure matching), AcadiaSoft (call affirmation), manual spreadsheets
+    \item Workflow: timestamped tracking, dispute codes, SLA-based resolution
+    \item Escalation: ops, legal, front office for aged or material disputes
+  \end{itemize}
+\end{frame}
+
+
+
+\section{Collateral Optimization}
+\begin{frame}{Collateral Optimization – Overview}
+  \begin{itemize}
+    \item Goal
+    \begin{itemize}
+      \item Minimize funding cost and maximize collateral eligibility and flexibility
+    \end{itemize}
+    \item Strategy
+    \begin{itemize}
+      \item  Apply based on available assets cheapest-to-deliver logic based on haircuts
+    \end{itemize}
+    \item Key inputs
+    \begin{itemize}
+      \item  Eligibility schedules (CSA/CCP), haircut matrices, funding costs, reuse and concentration limits
+    \end{itemize}
+    \item Constraints
+    \begin{itemize}
+      \item  Available collateral, regulatory constraints, internal risk policies, counterparty restrictions, minimize cost
+    \end{itemize}
+    \item Output
+    \begin{itemize}
+      \item  Optimal collateral allocation across counterparties and calls, prioritizing low-cost, high-eligibility assets within defined limits
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Collateral Optimization – Funding Efficiency Concept}
+  \begin{itemize}
+    \item Margin calls must consider not only eligibility and haircuts, but also funding cost
+    \item Funding cost is the opportunity cost of using the asset vs. repoing it or holding cash
+    \begin{itemize}
+      \item In practice this is the repo rate for securities and borrow rate for cash\footnote{Cash earns interest when posting as collateral but less than the borrow rate and usually expensive.}
+    \end{itemize}
+    \item Cheapest-to-deliver collateral is the asset that minimizes overall funding expense while meeting margin requirements
+    \item Objective: balance haircut impact, repo rate, and liquidity needs
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Collateral Optimization Example – Using Existing Bond Positions}
+  \begin{itemize}
+    \item Margin call: \$10 million
+    \item Internal unsecured borrowing rate: 6.00\%
+    \item SOFR overnight: 1.5\%
+    \item Available inventory:
+  \end{itemize}
+  \begin{table}[h]
+    \centering
+    \resizebox{0.95\textwidth}{!}{
+    \begin{tabular}{|l|c|c|c|c|c|}
+      \hline
+      \textbf{Asset} & \textbf{Repo Rate} & \textbf{Haircut} & \textbf{Effective Coverage} & \textbf{Available Amount} & \textbf{Funding Cost Impact} \\
+      \hline
+      USTs & 3.75\% & 0\% & 100\% & \$6 million & Lowest (preferred) \\
+      Corporate Bonds & 4.25\% & 2\% & 98\% & \$8 million & Moderate (still cheaper than cash) \\
+      Equities & 7.00\% & 15\% & 85\% & \$15 million & High (least preferred) \\
+      \hline
+    \end{tabular}
+    }
+  \end{table}
+  \vspace{0.1cm}
+  \begin{itemize}
+    \item Fill first \$6 million with USTs (full coverage, lowest funding cost).
+    \item Fill remaining \$4 million with corporate bonds (after haircut adjustment).
+    \item Avoid equities unless no other choice.
+    \item Avoid cash as 6\% borrowing more expensive than corporate bonds even when earning 1.5\% interest on cash.
+  \end{itemize}
+\end{frame}
+
+\input{../../../LatexTemplatesAndSamples/last_slides_summary_and_questions.tex}
+
+\section*{Appendix}
+\begin{frame}{Roadmap}
+  \begin{itemize}
+    \item Make definitions of the 5 asset classes consistent in format.
+    \item Add SIMM reconciled example but maybe this belongs more to an in-depth lecture.
+    \item Expand on operations section and optimization.
+    \item Mention implications of leverage with collateral. It's not completly free to trade derivatives any more which is a good thing.
+    \item Comment with zoom at the end of asset class coverage to talk about the timing when these asset classes came to market and how collateral differs - futures first, then repos and tbas and then swaps. bi-lateral still custom just bi-lateral ...
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+% ************* why is VM not enough?
+% Variation Margin is typically not enoughon its own for bilateral deals because it only covers currentexposure based on the changes in market value of the positions. However, it does not address the potential future exposurefrom large market movements or the risk of default over the life of the trade. Here's why Initial Margin is also necessary:
+
+% 1. Future Exposure : 
+%    - While VM reflects the current value of the position, it doesn't account for the risk of large price movements that could occur in the future, especially over the weekend or overnight. 
+%    - IM, on the other hand, is designed to cover the potential future exposurein case there’s a sudden market movement that could lead to significant losses.
+
+% 2. Default Risk Protection :
+%    - VM is designed to protect against current market risk(i.e., losses due to movements in market prices). However, if a counterparty defaults, you might not have enough collateral to cover the full risk of the position.
+%    - IM, on the other hand, is a buffer that helps cover potential losses in the event of default**—whether that’s due to adverse market conditions or the counterparty’s insolvency.
+
+% 3. Uncertainty and Time : 
+%    - The market can fluctuate dramatically in short periods, meaning that future exposurecan be substantial even if the current position appears settled with VM. IM helps to mitigate the uncertainty over longer periods of time, ensuring that there's enough collateral to cover both current and potential future losses.
+
+% 4. Bilateral Agreement Limitations : 
+%    - In bilateral arrangements, collateral management can vary and be less standardized compared to centrally cleared trades, which often use IM as part of their clearing process. IM in bilateral agreements is specifically intended to guard against the unpredictabilityof future risks.
+
+% In essence, while VM provides the necessary collateral for current exposure, IM ensures that there’s enough protection in place to cover future and extreme potential exposures**—thus offering more comprehensive risk management.
+
+% **********why caannot pfe just be hedged when things move against you?
+% Potential Future Exposure (PFE) represents the estimated risk or the maximum amount of credit exposure a party could face over a specified time horizon, considering changes in market conditions. While it’s tempting to think that PFE can just be hedged when things move against you, there are several reasons why this isn't always practical or feasible:
+
+% 1. Uncertainty and Timing : 
+%    - PFE is based on estimatesof potential exposure, and markets can move unpredictably. Even if you think you can hedge it, sudden or sharp market moves might create a situation where the hedge is either too costly or too late to be effective. 
+%    - Timing the market perfectly to hedge PFE when the exposure materializes is extremely difficult, especially in fast-moving or volatile markets.
+
+% 2. Hedge Costs and Liquidity :
+%    - Hedging PFE often involves significant costs**, especially if you're using instruments like derivatives. If the market moves significantly against you, the cost to hedge that exposure could increase drastically.
+%    - Moreover, liquidity in some markets might not be sufficient to hedge large exposures quickly, or the products needed to hedge may not be available in the quantities required.
+
+% 3. Counterparty Risk :
+%    - Hedging also assumes the availability of a willing counterpartyto take on the opposite side of the trade. If the market moves against you and you attempt to hedge, the counterparty may either demand unfavorable terms or may not even be willing to enter into the hedge, especially during periods of market stress.
+
+% 4. Model and Operational Limitations :
+%    - The models used to calculate PFEare based on assumptions that may not fully capture the reality of market behavior, especially during extreme conditions (e.g., a financial crisis). Thus, it can be difficult to determine the exact hedge needed to mitigate PFE risks accurately.
+%    - Additionally, operational constraintslike technology, execution speed, and the ability to execute large transactions quickly can impede timely and effective hedging.
+
+% 5. Basis Risk : 
+%    - Even if you hedge with a similar asset, basis riskarises when the hedge does not perfectly correlate with the underlying exposure. This means that even though you might be hedging, the price movements of the hedging instrument might not fully offset the movements of your actual exposure.
+
+% 6. Counterparty Defaults : 
+%    - In the event of a counterparty default, having a hedge might not protect you if the counterparty cannot settle their obligations. This risk is especially high if the hedge is with a counterparty that faces financial difficulties during times of market stress.
+
+% 7. Regulatory and Margin Requirements :
+%    - Regulatory requirementslike margin rules or capital charges could restrict the ability to freely hedge. These requirements can sometimes limit the effectiveness of hedging strategies or make it prohibitively expensive to maintain the hedge over time.
+
+% In summary, while PFE can technically be hedged, it’s much more challenging to rely on this approach alone because of timing difficulties, cost considerations, liquidity constraints, counterparty risk, and regulatory hurdles. That’s why many firms prefer to use Initial Marginas a precautionary measure to secure potential future exposure, as it provides a buffer to protect against market movements before they materialize.
+

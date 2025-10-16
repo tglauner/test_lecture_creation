@@ -1,0 +1,352 @@
+%\documentclass[aspectratio=169]{beamer} %1920x1080 resolution
+\documentclass[handout, aspectratio=169]{beamer}
+%\documentclass[handout]{beamer} % For printing only 
+\usepackage{../../../LatexTemplatesAndSamples/mastering_ir_derivatives_beamer} % My custom style
+
+% This goes together with handout feature above
+%\pgfpagesuselayout{2 on 1}
+
+% Needs to be set for each class
+\subtitle{Interest Rate Fundamentals}
+
+\begin{document}
+
+\input{../../../LatexTemplatesAndSamples/firstThreeSlides.tex}
+
+\section{Term Structure of Interest Rates and Bonds}
+\begin{frame}{Derive Spot Rates based on Bond Prices - 1}
+	\pause
+	\begin{itemize}
+		\item Bond prices are expressions of interest rates 
+		\item Zero-coupon bonds pay only par at maturity
+	\end{itemize}
+	\begin{example}
+		\scriptsize
+		\begin{itemize}
+			\item Assume we have six zero-coupon bonds with different maturities
+			\item Each bond has a face value of \$100 and matures at the end of each year for the next six years
+			\item The transaction price for each of these bonds is listed below
+		\end{itemize}
+		\begin{columns}
+			\begin{column}{0.5\textwidth}
+				\begin{table}[h]
+					\begin{tabular}{|c|c|} 
+						\hline
+						\textbf{Maturity} & \textbf{Price}\\				
+						\hline
+						1 year & 94.88 \\
+						2 years & 90.75 \\
+						3 years & 87.25 \\
+						\hline
+					\end{tabular}
+				\end{table}
+			\end{column}
+			\begin{column}{0.5\textwidth}
+				\begin{table}[h]
+					\begin{tabular}{|c|c|} 
+						\hline
+						\textbf{Maturity} & \textbf{Price}\\				
+						\hline
+						4 years & 84.05 \\
+						5 years & 80.78 \\
+						6 years & 77.63 \\
+						\hline
+					\end{tabular}
+				\end{table}
+			\end{column}
+		 \end{columns}
+	\end{example}
+\end{frame}
+
+\begin{frame}{Derive Spot Rates based on Bond Prices - 2}
+	\begin{example}
+		\scriptsize
+		continued
+		\begin{itemize}
+			\item Define term and compounding convention for spot rate
+			\item We assume an annual rate and annual compounding
+			\item Using standard discounting we can determine the spot rates, $\{r_i\}$
+			\item $P = \frac{\$100}{(1 + r)^n}$ 
+			\item where $P$ is the bond price, $n$ the number of years
+		\end{itemize} 
+		\begin{columns}
+			\begin{column}{0.5\textwidth}
+				\begin{table}[h]
+					\begin{tabular}{|c|c|c|} 
+						\hline
+						\textbf{Maturity} & \textbf{Price} & \textbf{Rate (\%)}\\				
+						\hline
+						1 year & 94.88 & 5.40 \\
+						2 years & 90.75 & 4.97 \\
+						3 years & 87.25 & 4.65 \\
+						\hline
+					\end{tabular}
+				\end{table}
+			\end{column}
+			\begin{column}{0.5\textwidth}
+				\begin{table}[h]
+					\begin{tabular}{|c|c|c|} 
+						\hline
+						\textbf{Maturity} & \textbf{Price} & \textbf{Rate (\%)}\\				
+						\hline
+						4 years & 84.05 & 4.44 \\
+						5 years & 80.78 & 4.36 \\
+						6 years & 77.63 & 4.31 \\
+						\hline
+					\end{tabular}
+				\end{table}
+			\end{column}
+		\end{columns}
+	\end{example}
+\end{frame}
+
+\section{Compounding}
+\begin{frame}{Compounding}
+	\begin{itemize}
+		\item Compounding is the process where the interest earned is reinvested to generate additional earnings
+		\item Compounding usually happens multiple times and create exponential growth in interest earned
+		\item Various compounding conventions exist
+		\begin{itemize}
+			\item Annual, semi-annual, quarterly, monthly, weekly
+			\item Daily is now the most common convention due to LIBOR cessation
+			\item LIBOR has been discontinued and replaced by SOFR
+			\item SOFR is an overnight rate, hence daily compounding is natural
+			\item Continuous compounding is also common in quantitative models
+		\end{itemize}
+		\item Conversions from one rate to another can be explored as an exercise
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Compounding Intuition - 1}
+	\pause
+	\begin{itemize}
+		\item Let's create some intuition around compounding
+		\item Assume an annual rate and quarterly compounding
+		\item $P_i$ is the principal after $i$ compounding periods
+		\item $r$ is the annual rate, $I$ is the interest
+		\item Let's illustrate how much principal we have after one year  
+		\begin{example}
+			\scriptsize
+			After 3 months, which is the end of the first compounding period, we have:
+			\begin{align*}
+				\onslide<7->{P_1 &= P_0 + I \\}
+				\onslide<8->{&= P_0 + P_0 \cdot \frac{r}{4} \\}
+				\onslide<9->{&= P_0 \cdot \left(1+\frac{r}{4}\right)}
+			\end{align*}
+		\end{example}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Compounding Intuition - 2}
+	\begin{example}
+		\tiny
+		After 6 months, which is the end of the second compounding period, we calculate the value of the principal using the compound interest formula:
+		\begin{itemize}
+			\item[$P_0$:] Initial principal
+			\item[$P_1$:] Value at end of first compounding period
+			\item[$P_2$:] Value at end of second compounding period
+		\end{itemize}
+		\begin{align*}
+			\onslide<5->{P_2 &= P_1 + I \\}
+			\onslide<6->{	&= P_1 + P_1 \cdot \frac{r}{4} \\}
+			\onslide<7->{	&= P_1 \cdot \left(1+\frac{r}{4}\right) \\}
+			\onslide<8->{	&= P_0 \cdot \left(1+\frac{r}{4}\right) \cdot \left(1+\frac{r}{4}\right) \\}
+			\onslide<9->{	&= P_0 \cdot \left(1+\frac{r}{4}\right)^2}
+		\end{align*}
+	\end{example}
+\end{frame}
+
+\begin{frame}{Compounding Intuition - 3}
+	\begin{example}
+		\tiny
+		After 9 months, which corresponds to the end of the third compounding period, the final amount $P_3$ is calculated as follows:
+		\begin{itemize}
+			\item[$P_0$:] Initial principal
+			\item[$P_2$:] Value at end of second compounding period
+			\item[$P_3$:] Value at end of third compounding period
+		\end{itemize}
+		\begin{align*}
+			\onslide<5->{P_3 &= P_2 + I \\}
+			\onslide<6->{	&= P_2 + P_2 \cdot \frac{r}{4} \\}
+			\onslide<7->{	&= P_2 \cdot \left(1+\frac{r}{4}\right) \\}
+			\onslide<8->{	&= P_0 \cdot \left(1+\frac{r}{4}\right)^2 \cdot \left(1+\frac{r}{4}\right) \\}
+			\onslide<9->{	&= P_0 \cdot \left(1+\frac{r}{4}\right)^3}
+		\end{align*}
+	\end{example}
+\end{frame}
+
+\begin{frame}{Compounding Intuition - 4}
+	\begin{example}
+		\tiny
+		Finally, after 1 year we get
+		\begin{itemize}
+			\item[$P_0$:] Initial principal
+			\item[$P_3$:] Value at end of third compounding period
+			\item[$P_4$:] Value at end of fourth and last compounding period
+		\end{itemize}
+		\begin{align*}
+			\onslide<5->{P_4 &= P_3 + I \\}
+			\onslide<5->{	&= P_3 + P_3 \cdot \frac{r}{4} \\}
+			\onslide<5->{	&= P_3 \cdot (1+\frac{r}{4}) \\}
+			\onslide<5->{	&= P_0 \cdot (1+\frac{r}{4})^3 \cdot (1+\frac{r}{4}) \\}
+			\onslide<5->{	&= P_0 \cdot (1+\frac{r}{4})^4}
+		\end{align*}
+	\end{example}
+\end{frame}
+
+\begin{frame}{Compounding Intuition - 5}
+	\begin{corollary}
+		We can now generalize and state that for $n$ compounding periods
+		\begin{align*}
+			P_n &= P_0 \cdot \left(1+\frac{r}{n}\right)^n
+		\end{align*}
+		\begin{itemize}
+			\item[$r$:] Annual rate
+			\item[$n$:] Number of coumpounding periods
+			\item[$P_0$:] Initial principal
+			\item[$P_n$:] Value at end of n\textsuperscript{th} compounding period
+		\end{itemize}
+	\end{corollary}
+\end{frame}
+
+\section{Basis and Cashflow Calculation}
+\begin{frame}{Basis Example}
+	\pause
+	\begin{itemize}
+		\item We start with an example to illustrate the significance of the basis
+	\end{itemize}
+	\begin{Example}
+		\scriptsize
+		\onslide<3->{Imagine we have a financial instrument with an interest rate period that starts on 5th January 2023 and ends on 5th July 2023}
+		
+		\onslide<4->{For a Money Market trade with a 1\% coupon, we calculate the cashflow as follows:
+		\begin{align*}
+			Cashflow 	&= \$1,000,000 \cdot 1\% \cdot \frac{181}{360} = \$5,027.78
+		\end{align*}
+		}
+		\onslide<5->{For a Treasury bond trade with a 1\% coupon, we calculate the cashflow as follows:
+		\begin{align*}
+			Cashflow 	&= \$1,000,000 \cdot 1\% \cdot \frac{180}{360} = \$5,000
+		\end{align*}
+		}
+		\onslide<6->{The basis differs, defining how to calculate the length of the interest period}
+	\end{Example}
+\end{frame}
+
+\begin{frame}{Basis and Cashflow Calculation}
+	\pause
+	\begin{itemize}
+		\item Day count or basis defines the year fraction between two dates
+		\item Measure is necessary to define calculation of cash flows
+	\end{itemize}
+	\begin{block}{}
+		\scriptsize
+		We calculate cash flows for an interest rate period as
+		\begin{align*}
+			\text{Cashflow} &= \text{Notional} \cdot \text{Rate} \cdot \text{Year Fraction}\\
+			\text{Year Fraction} &= \frac{\text{Basis Numerator}}{\text{Basis Denominator}}
+		\end{align*}
+		where numerator and denominator are defined by the basis
+	\end{block}
+\end{frame}
+
+\begin{frame}{Numerator, Denominator and Sample Basis}
+	\pause
+	\begin{itemize}
+		\footnotesize
+		\item Measure for basis in numerator calculates days between the start and end date
+		\begin{itemize}
+			\footnotesize
+			\item Actual number of days
+			\item Assumed 30 days per month
+			\item Business days only
+		\end{itemize}
+		\item Measure for basis in denominator calculates days in a year
+		\begin{itemize}
+			\footnotesize
+			\item 360 days
+			\item 365 days
+			\item 365 days with leap year adjustments
+			\item 252 days (business days)
+		\end{itemize}
+		\item Many bases are used in the market, including
+		\begin{itemize}
+			\footnotesize
+			\item Act/360 - used in SOFR swap and money market calculations
+			\item 30/360 - used in swap fixed leg and corporate bond calculations
+			\item Act/Act - used in treasury bond calculations
+			\item BUS/252 - common in Brazil 
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\section{Spot, Zero and Short Rates}
+\begin{frame}{Spot and Zero Rates}
+	\pause
+	\begin{itemize}
+		\item A \textbf{spot rate} is the interest rate from today for a set period
+		\item \textbf{Zero rates} (denoted as $z$) are continuously compounded spot rates with a basis of A/365 
+		\item Hence, the discount factor using zero rates is
+	\end{itemize}
+	\begin{block}{}
+		\begin{align*}
+			DF(T_0,T_1) &= e^{-z \cdot \frac{ActualDays(T_0,T_1)}{365}} = e^{-z \cdot dt}
+		\end{align*}
+		\begin{itemize}
+			\item[$DF$:] Discount factor
+			\item[$z$:] Zero rate 
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Short Rates}
+	\pause
+	\begin{itemize}
+		\item An \textbf{instantanous short rate} is a spot rate for an infinitesimally short period of time
+		\item Provides a foundational building block in continuous-time stochastic interest rate models for quants and traders
+		\item Requires understanding of stochastic calculus
+		\item The Heath-Jarrow-Morton (HJM) model uses stochastic instantaneous short rate 
+		\item Instantaneous short rates are usually continuously compounded
+		\item Such rates are not observed but are used as theoretical constructs
+		\item Continous nature allows derivation of complex models
+	\end{itemize}
+\end{frame}
+
+\section{Forward Rates}
+\begin{frame}{Forward rates - 1}
+	\pause
+	\begin{itemize}
+		\item Forward rates are set today but apply to specified future periods
+		\item Essential for swaps, alongside discount factors
+ 	\end{itemize}
+	\begin{Example}
+		\begin{itemize}
+			\item Let's assume today's date is 3-Jan-2023
+			\item Today's 3-month rate 6 months forward applies from 3-Jul-2023 to 3-Oct-2023
+			\item We define it as $f(\text{03-Jan-2023}, \text{03-Jul-2023}, \text{3-Oct-2023})$
+			\item More generally, we can denote it as $f(T_0, T_1, T_2)$
+		\end{itemize}
+	\end{Example}
+\end{frame}
+
+\begin{frame}{Forward rates - 2}
+	\begin{itemize} 
+		\item Forward rates span specific start and end dates
+		\item Determined in markets
+		\item Market product for these is the Forward Rate Agreement (FRA)
+		\item Consider them as the slope or first derivative of spot rates
+	\end{itemize}
+\end{frame}
+
+\input{../../../LatexTemplatesAndSamples/last_slides_summary_and_questions.tex}
+
+% \begin{frame}{Enhancements to this Lecture}
+% 	\begin{itemize}
+% 		\item Add Rolling Conventions such as F, MF, P\\
+% 		This comes up later in curves where we have a 1M MM maturity date from goes from Jan 31 as it's rolled back
+% 		\item Add main calendars such as NY, NYL, BMA
+% 		\item Modify principal concept $P_i$ to a Notional concept which is more applicable to derivatives
+% 	\end{itemize}
+% \end{frame}
+
+\end{document}
