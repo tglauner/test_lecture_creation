@@ -1,0 +1,163 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\begin{document}
+\title{Lecture 067 --- Cross-Currency Interest Rate Curves}
+\author{}
+\date{}
+\maketitle
+
+\section*{Learning Objectives}
+\begin{itemize}[leftmargin=*]
+  \item Explain why cross-currency interest rate curves are required for modern multi-currency valuation frameworks.
+  \item Describe the instruments, quoting conventions, and market data needed to construct cross-currency discount and forecast curves.
+  \item Execute the bootstrapping workflow that simultaneously calibrates domestic and foreign curves with basis adjustments.
+  \item Evaluate modeling and risk management considerations, including collateral agreements, curve extrapolation, and stress testing.
+\end{itemize}
+
+\section{Setting the Stage: Why Cross-Currency Curves Matter}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Post-crisis market evolution}: Since 2008, collateralized trading and central clearing separated funding rates from risk-free benchmarks. Multi-currency derivatives now require discount curves tied to collateral currencies, plus forecast curves for each floating index.
+  \item \textbf{Valuation neutrality}: Consistent valuation requires that forward FX rates implied by discount curves match the cross-currency swap (CCS) market. Inconsistencies manifest as arbitrage or mis-priced trades.
+  \item \textbf{Business drivers}: Treasury funding, structured product issuance, and global client hedging all depend on reliable cross-currency curve sets. Errors cascade into pricing, liquidity management, and regulatory capital metrics.
+\end{itemize}
+
+\section{Market Instruments and Conventions}
+\subsection{Building Blocks}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{FX spots and forwards}: Provide the anchor for relative value between currencies. Spot FX sets the notional exchange, while FX forwards inform the short end of the basis when liquid.
+  \item \textbf{Interest rate swaps (IRS)}: Domestic fixed-versus-floating swaps calibrate single-currency curves (OIS and IBOR-based) that feed into cross-currency construction.
+  \item \textbf{Cross-currency swaps}: Deliver periodic notional exchanges and floating payments in two currencies. Variants include fixed/floating, floating/floating (most common), and basis swaps exchanging different tenor indices (e.g., USD SOFR vs. EUR ESTR).
+  \item \textbf{Basis swaps and basis spreads}: Market quotes are typically expressed as spreads added to the floating leg in one currency to equate present values under par conditions.
+\end{itemize}
+
+\subsection{Quoting Mechanics}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Reset and payment calendars}: Align with each index's business day conventions; mismatches require detailed schedule generation.
+  \item \textbf{Day count conventions}: Common combinations include ACT/360 vs. ACT/365F, influencing accrual factors and curve calibration.
+  \item \textbf{Collateral currency assumption}: Determine which discount curve applies. A USD collateralized EUR-USD CCS uses a USD OIS discount curve for both legs while forecasting respective floating cash flows on EUR ESTR and USD SOFR indices.
+  \item \textbf{Quote types}: Market may quote spreads on either leg, mid-market basis plus bid/ask, or via all-in forward points. Understanding the quoting axis is essential for clean data ingestion.
+\end{itemize}
+
+\section{Data Preparation and Curve Segmentation}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Instrument taxonomy}: Classify instruments by maturity and liquidity (e.g., short-dated FX forwards, intermediate CCS, long-dated mark-to-market swaps).
+  \item \textbf{Market data alignment}: Ensure consistency of fixing histories, holiday calendars, and FX spot cut-off times.
+  \item \textbf{Curve segmentation}: Maintain separate curves for discounting (per collateral currency) and forecasting (per floating index). Cross-currency curves often require linked bootstraps because basis spreads depend on both sets.
+  \item \textbf{Initial guesses}: Use anchored single-currency curves and simple basis interpolations to initialize the joint solve.
+\end{itemize}
+
+\section{Bootstrapping Workflow}
+\subsection{Conceptual Overview}
+\begin{enumerate}[leftmargin=*]
+  \item Lock collateral discount curves: Start with overnight indexed swap (OIS) curves for each collateral currency, reflecting CSA terms.
+  \item Construct domestic forecast curves: Build single-currency IBOR or RFR curves using IRS and basis swaps (e.g., SOFR vs. term SOFR).
+  \item Incorporate cross-currency instruments: Use CCS quotes to solve for basis adjustments that align foreign-leg discounting with domestic collateral assumptions.
+  \item Iterate to convergence: Because discount factors and forward FX rates interact, iterative methods (Gauss--Seidel, Newton--Raphson, or simultaneous solvers) are common.
+\end{enumerate}
+
+\subsection{Detailed Steps}
+\paragraph{Step A --- Short-end calibration}
+\begin{itemize}[leftmargin=*]
+  \item Combine spot FX, overnight FX swap points, and short-dated CCS (if available) to pin near-term basis spreads.
+  \item Apply collateral adjustments: if collateral differs from either currency, discount short cash flows on the collateral curve, not the domestic curve.
+\end{itemize}
+
+\paragraph{Step B --- Intermediate maturities}
+\begin{itemize}[leftmargin=*]
+  \item Use liquid tenors (1Y--10Y) where basis quotes are most reliable. Solve for forward basis spreads such that present value of both legs equals zero when discounting on collateral curves.
+  \item Impose smoothness constraints (e.g., cubic spline or monotone convex interpolation) while preserving no-arbitrage conditions.
+\end{itemize}
+
+\paragraph{Step C --- Long-end extrapolation}
+\begin{itemize}[leftmargin=*]
+  \item For sparse data beyond 15--20 years, impose asymptotic assumptions (mean-reverting basis, constant forward spreads) consistent with economic narratives.
+  \item Stress-test sensitivity to alternative extrapolations, as valuation of long-dated trades is highly sensitive.
+\end{itemize}
+
+\paragraph{Step D --- Consistency checks}
+\begin{itemize}[leftmargin=*]
+  \item Verify triangular relationships: FX forward implied by discount curves should match market forward; cross-check with FX option-implied carry where possible.
+  \item Ensure cashflow present values vanish under par assumptions within numerical tolerance.
+\end{itemize}
+
+\section{Modeling Considerations}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Collateral optionality}: Many CSAs allow currency switches. Modeling requires scenario-dependent discount curves or valuation adjustments (COLVA/Funding VA).
+  \item \textbf{Central clearing nuances}: CCPs specify discounting methodology (e.g., LCH uses SONIA discounting for GBP cleared trades). House valuations must align with CCP margining.
+  \item \textbf{Interest rate benchmark reform}: Transition from LIBOR to RFRs alters floating leg definitions and available historical data. Maintain curve variants for legacy trades referencing fallback rates.
+  \item \textbf{Curve construction tools}: Industry practice leverages bootstrapping engines (QuantLib, in-house libraries) with automatic differentiation to supply sensitivities for risk aggregation.
+  \item \textbf{Numerical stability}: Guard against oscillations by using robust interpolation (log-linear on discount factors, monotone splines on forward basis) and damping iterations when quotes are noisy.
+\end{itemize}
+
+\section{Risk Management and Hedging}
+\subsection{Sensitivity Measures}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Curve DV01s}: Separate sensitivities by currency, curve segment, and collateral assumption to reflect hedge ratios accurately.
+  \item \textbf{FX-IR interplay}: Cross-gamma between FX spot and interest rate curves matters for margin and VaR; incorporate multi-factor risk models.
+  \item \textbf{Basis bucket risk}: Monitor exposures to specific basis tenors (e.g., 5Y EURUSD basis) since liquidity can dry up quickly under stress.
+\end{itemize}
+
+\subsection{Hedging Tactics}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Micro hedging}: Use offsetting CCS trades or FX swaps to neutralize individual trade sensitivities.
+  \item \textbf{Macro hedging}: Align structural funding positions with treasury issuance (e.g., issuing EUR debt swapped back to USD to exploit favorable basis).
+  \item \textbf{Liquidity management}: Track collateral demands from currency moves; maintain diversified funding to avoid wrong-way risk with counterparties.
+\end{itemize}
+
+\subsection{Stress Testing and Scenario Analysis}
+\begin{itemize}[leftmargin=*]
+  \item Simulate historical dislocations (e.g., 2008 USD funding squeeze, 2020 COVID liquidity shock) to assess P\&L and collateral swings.
+  \item Combine parallel shifts, steepeners, and FX shocks to gauge worst-case exposures under integrated scenarios.
+  \item Evaluate knock-on effects on valuation adjustments (CVA/FVA/MVA) given correlated moves in credit spreads and funding basis.
+\end{itemize}
+
+\section{Case Study: EUR/USD Cross-Currency Basis}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Market snapshot}: Discuss how the EURUSD basis typically trades negative (USD demand for funding) and widens during funding stress.
+  \item \textbf{Data ingestion}: Acquire spot FX, FX forwards, EUR ESTR OIS curve, USD SOFR OIS curve, EUR IRS, USD IRS, and market CCS spreads for tenors 1Y--30Y.
+  \item \textbf{Bootstrapping illustration}: Walk through calibrating a USD-collateralized curve set. Show how a $-20$ bp 5Y basis quote shifts the USD discount factor adjustment relative to EUR.
+  \item \textbf{Risk interpretation}: Examine DV01 decomposition for a 10Y EUR payer CCS hedging USD liabilities. Highlight sensitivity to EUR curve, USD curve, basis curve, and FX spot.
+  \item \textbf{Reporting}: Present dashboards showing curve shapes, basis term structure, and hedging recommendations for treasury stakeholders.
+\end{itemize}
+
+\section{Implementation Notes for Analytics Teams}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Workflow automation}: Schedule daily curve builds with validation gates for stale or missing quotes.
+  \item \textbf{Data governance}: Maintain golden sources, audit trails, and model documentation to satisfy regulatory expectations (e.g., SR 11-7 in the US, ECB TRIM guidelines).
+  \item \textbf{Version control and reproducibility}: Tag curve builds with code commit hashes, market data timestamps, and configuration metadata.
+  \item \textbf{Operational resilience}: Build fallbacks for illiquid markets---e.g., proxy basis using related currency pairs, or switch to broker quotes when screens are empty.
+\end{itemize}
+
+\section{Studio Exercises and Further Reading}
+\subsection{Hands-on Activities}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Curve bootstrapping lab}: Students implement a simplified EURUSD CCS bootstrap using provided market data, comparing linear vs. log-linear interpolation outcomes.
+  \item \textbf{Stress test builder}: Construct a scenario generator that perturbs basis spreads independently from domestic curves and observes P\&L for a multi-currency swap portfolio.
+  \item \textbf{Collateral switch analysis}: Evaluate the impact of switching CSA collateral from USD to EUR on a set of cross-currency trades.
+\end{itemize}
+
+\subsection{Discussion Questions}
+\begin{enumerate}[leftmargin=*]
+  \item What economic forces drive persistent negative USD basis spreads, and how might central bank facilities influence them?
+  \item How does the choice of interpolation method affect hedging effectiveness for long-dated CCS positions?
+  \item In what situations would a firm intentionally maintain an open basis exposure?
+\end{enumerate}
+
+\subsection{Suggested Reading}
+\begin{itemize}[leftmargin=*]
+  \item BIS Quarterly Review articles on global dollar funding markets.
+  \item ``Multi-Curve Framework for Interest Rate Derivatives'' (Henrard, 2014) --- chapters on cross-currency modeling.
+  \item ISDA collateral and valuation adjustment best-practice papers.
+  \item Central bank speeches on FX swap market functioning (e.g., ECB, Federal Reserve).
+\end{itemize}
+
+\subsection{Preparation for Next Lecture}
+\begin{itemize}[leftmargin=*]
+  \item Review valuation adjustments (CVA, FVA, MVA) and how cross-currency curves feed into exposure profiles.
+  \item Gather recent market data snapshots (spot, forwards, CCS spreads) for a chosen currency pair to use in the next session's exercises.
+\end{itemize}
+
+\end{document}
